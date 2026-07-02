@@ -1,352 +1,308 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ESP32-CAM Security System to LINE OA - สื่อการเรียนรู้ด้วยตนเอง</title>
-    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600&family=Sarabun:wght@300;400;500;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        body { font-family: 'Sarabun', 'Kanit', sans-serif; }
-        .heading-font { font-family: 'Kanit', sans-serif; }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SECURITY LAB - ESP32-CAM Academy</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&family=Prompt:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+    :root {
+        --bg-color: #020617;
+        --panel-bg: rgba(15, 23, 42, 0.7);
+        --neon-blue: #00ffff;
+        --neon-purple: #8b5cf6;
+        --text-main: #f8fafc;
+        --text-muted: #94a3b8;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    
+    body {
+        font-family: 'Prompt', sans-serif;
+        background-color: var(--bg-color);
+        color: var(--text-main);
+        display: flex;
+        height: 100vh;
+        overflow: hidden;
+        background-image: 
+            radial-gradient(circle at 15% 50%, rgba(0, 255, 255, 0.05), transparent 25%),
+            radial-gradient(circle at 85% 30%, rgba(139, 92, 246, 0.05), transparent 25%);
+    }
+
+    /* แถบเมนูด้านซ้าย */
+    .sidebar {
+        width: 320px;
+        background: var(--panel-bg);
+        border-right: 1px solid rgba(0, 255, 255, 0.2);
+        backdrop-filter: blur(10px);
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        z-index: 10;
+    }
+
+    .brand {
+        font-family: 'Orbitron', sans-serif;
+        font-size: 22px;
+        color: var(--neon-blue);
+        text-shadow: 0 0 10px var(--neon-blue);
+        margin-bottom: 25px;
+        text-align: center;
+        letter-spacing: 2px;
+    }
+
+    .mission-list { 
+        list-style: none; 
+        overflow-y: auto; 
+        flex: 1;
+        padding-right: 5px;
+    }
+    
+    .mission-list::-webkit-scrollbar { width: 4px; }
+    .mission-list::-webkit-scrollbar-thumb { background: rgba(0, 255, 255, 0.2); border-radius: 10px; }
+
+    .mission-item {
+        margin-bottom: 12px;
+        padding: 14px;
+        border-radius: 10px;
+        background: rgba(255,255,255,0.01);
+        border: 1px solid rgba(255,255,255,0.05);
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .mission-item:hover {
+        border-color: rgba(0, 255, 255, 0.4);
+        background: rgba(0, 255, 255, 0.04);
+    }
+
+    .mission-item.active {
+        border-color: var(--neon-blue);
+        box-shadow: 0 0 15px rgba(0, 255, 255, 0.15);
+        background: rgba(0, 255, 255, 0.08);
+    }
+
+    .mission-id { font-family: 'Orbitron', sans-serif; font-weight: 700; font-size: 13px; color: var(--neon-blue); }
+    .mission-title { font-weight: 500; font-size: 14px; color: var(--text-main); margin: 2px 0; }
+    .mission-desc { font-size: 11px; color: var(--text-muted); display: none; }
+
+    .mission-item.active .mission-desc { display: block; }
+
+    /* พื้นที่เนื้อหาหลัก */
+    .main-content {
+        flex: 1;
+        padding: 30px;
+        display: flex;
+        flex-direction: column;
+        height: 100vh;
+        overflow-y: auto;
+    }
+
+    /* พื้นที่แสดงไฟล์ PDF */
+    .pdf-container {
+        width: 100%;
+        height: calc(100vh - 90px);
+        background: #1e293b;
+        border: 1px solid rgba(0, 255, 255, 0.2);
+        border-radius: 12px;
+        box-shadow: 0 5px 25px rgba(0,0,0,0.4);
+        overflow: hidden;
+        position: relative;
+        flex: 1;
+        min-height: 400px;
+    }
+    
+    .pdf-placeholder {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        color: #64748b;
+        text-align: center;
+        z-index: 1;
+    }
+
+    .pdf-container iframe {
+        width: 100%;
+        height: 100%;
+        border: none;
+        position: relative;
+        z-index: 2;
+        background: white;
+    }
+
+    /* ปุ่ม AI */
+    .ask-ai-btn {
+        position: fixed;
+        bottom: 30px;
+        right: 30px;
+        background: linear-gradient(45deg, #00ffff, #8b5cf6);
+        color: #020617;
+        font-family: 'Prompt', sans-serif;
+        font-weight: 600;
+        padding: 14px 22px;
+        border-radius: 30px;
+        border: none;
+        cursor: pointer;
+        box-shadow: 0 4px 15px rgba(0, 255, 255, 0.3);
+        transition: all 0.3s ease;
+        z-index: 100;
+    }
+
+    .ask-ai-btn:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 6px 25px rgba(139, 92, 246, 0.5);
+    }
+
+    /* 📱 การจัดหน้าจอสำหรับมือถือและแท็บเล็ต */
+    @media (max-width: 850px) {
+        body {
+            flex-direction: column;
+            overflow-y: auto;
+            height: auto;
+        }
+        .sidebar {
+            width: 100%;
+            height: auto;
+            max-height: 250px;
+            border-right: none;
+            border-bottom: 1px solid rgba(0, 255, 255, 0.2);
+        }
+        .main-content {
+            height: auto;
+            overflow: visible;
+            padding: 20px;
+        }
+        .pdf-container {
+            height: 80vh;
+        }
+        .ask-ai-btn {
+            bottom: 15px;
+            right: 15px;
+            padding: 10px 16px;
+            font-size: 13px;
+        }
+    }
+</style>
 </head>
-<body class="bg-gray-900 text-gray-100 min-h-screen flex flex-col md:flex-row">
+<body>
 
-    <aside class="w-full md:w-80 bg-gray-950 border-b md:border-b-0 md:border-r border-gray-800 p-6 flex flex-col">
-        <div class="mb-8">
-            <h1 class="heading-font text-xl font-bold text-emerald-400 flex items-center gap-2">
-                <i class="fa-solid fa-shield-halved"></i> IoT Security Lab
-            </h1>
-            <p class="text-xs text-gray-400 mt-1">สื่อการสอนออนไลน์ ปวช. อิเล็กทรอนิกส์</p>
-        </div>
-        
-        <nav class="flex-1 space-y-2">
-            <button onclick="switchMission('overview')" id="btn-overview" class="mission-btn w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 bg-emerald-600 text-white font-medium transition">
-                <i class="fa-solid fa-circle-info w-5"></i> <span>ภาพรวมของระบบ</span>
-            </button>
-            <button onclick="switchMission('m1')" id="btn-m1" class="mission-btn w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 text-gray-400 hover:bg-gray-900 hover:text-white transition">
-                <i class="fa-solid fa-comments w-5"></i> <span>Mission 1: ตั้งค่า LINE OA</span>
-            </button>
-            <button onclick="switchMission('m2')" id="btn-m2" class="mission-btn w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 text-gray-400 hover:bg-gray-900 hover:text-white transition">
-                <i class="fa-solid fa-cloud-code w-5"></i> <span>Mission 2: สร้าง API คลาวด์</span>
-            </button>
-            <button onclick="switchMission('m3')" id="btn-m3" class="mission-btn w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 text-gray-400 hover:bg-gray-900 hover:text-white transition">
-                <i class="fa-solid fa-microchip w-5"></i> <span>Mission 3: ต่อวงจรฮาร์ดแวร์</span>
-            </button>
-            <button onclick="switchMission('m4')" id="btn-m4" class="mission-btn w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 text-gray-400 hover:bg-gray-900 hover:text-white transition">
-                <i class="fa-solid fa-code w-5"></i> <span>Mission 4: พัฒนาซอฟต์แวร์</span>
-            </button>
-            <button onclick="switchMission('m5')" id="btn-m5" class="mission-btn w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 text-gray-400 hover:bg-gray-900 hover:text-white transition">
-                <i class="fa-solid fa-square-poll-horizontal w-5"></i> <span>Mission 5: ทดสอบระบบ</span>
-            </button>
-        </nav>
-
-        <div class="mt-8 pt-4 border-t border-gray-800 text-xs text-center text-gray-500">
-            &copy; 2026 Elec-Ed WebApp Template
-        </div>
+    <aside class="sidebar">
+        <div class="brand">SECURITY LAB</div>
+        <ul class="mission-list" id="sidebarMenu"></ul>
     </aside>
 
-    <main class="flex-1 p-6 md:p-10 max-w-5xl overflow-y-auto">
+    <main class="main-content">
+        <h3 style="color: var(--neon-blue); margin-bottom: 12px; font-size: 16px;">📄 Operation Manual (คู่มือปฏิบัติการ)</h3>
         
-        <div class="mb-8 bg-blue-950/40 border border-blue-900 rounded-xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            <div>
-                <h4 class="heading-font text-blue-300 font-medium">📚 เอกสารประกอบการเรียนรู้ฉบับเต็ม</h4>
-                <p class="text-xs text-gray-400 mt-0.5">เปิดดูไฟล์คู่มือการต่อวงจรและโค้ดตัวเต็มเพื่อศึกษาประกอบบทเรียน</p>
-            </div>
-            <a href="My_Security_By_ESP32CAM_Line OA....Reduce.pdf" target="_blank" class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium rounded-lg shadow transition inline-flex items-center gap-2">
-                <i class="fa-solid fa-file-pdf"></i> เปิดไฟล์คู่มือ PDF
-            </a>
+        <div class="pdf-container">
+            <div class="pdf-placeholder" id="pdfPlaceholder">กำลังโหลดเอกสาร...</div>
+            <iframe id="pdfViewer" src=""></iframe>
         </div>
-
-        <div id="content-area">
-            </div>
-
     </main>
 
-    <script>
-        // โครงสร้างฐานข้อมูลของแต่ละภารกิจ (ทำหน้าที่เก็บข้อความอธิบายและโค้ดตัวอย่าง)
-        const missionData = {
-            overview: {
-                title: "🏠 ภาพรวมระบบ Security ด้วย ESP32-CAM ส่งภาพทาง LINE OA",
-                desc: "ยินดีต้อนรับนักเรียนสาขาอิเล็กทรอนิกส์ทุกคนเข้าสู่สื่อการเรียนรู้เชิงปฏิบัติการ ระบบนี้คือการนำบอร์ดควบคุมสถาปัตยกรรม IoT ขนาดจิ๋วที่มีกล้องถ่ายรูปในตัว (ESP32-CAM) มาประยุกต์ร่วมกับคลาวด์แพลตฟอร์มยอดนิยม เพื่อทำเป็นระบบแจ้งเตือนการบุกรุกเมื่อมีสิ่งผิดปกติ",
-                steps: [
-                    "<b>IoT + Cloud + Automation:</b> เรียนรู้การต่อฮาร์ดแวร์เพื่อรับอินพุตสัญญาณ (Digital Input)",
-                    "<b>Image Encoding:</b> ทำความเข้าใจการส่งไฟล์ขนาดใหญ่ผ่านการแปลงรูปเป็น Base64 String",
-                    "<b>No-Server Concept:</b> ใช้บริการคลาวด์ฟรีของ Google และ LINE โดยไม่ต้องเสียเงินซื้อโฮสติ้งเอง"
-                ],
-                tip: "คำแนะนำสำหรับนักเรียน: ให้ทำตามขั้นตอนตั้งแต่ Mission 1 ถึง 5 ไปตามลำดับ ห้ามข้ามขั้นตอนเด็ดขาดนะครับ!",
-                codeBlock: null
-            },
-            m1: {
-                title: "💬 Mission 1: การเตรียมฝั่ง LINE (LINE Messaging API)",
-                desc: "ภารกิจแรกคือการเปิดช่องทางสื่อสารสำหรับส่งภาพเข้าห้องแชตส่วนตัวผ่านบอทผู้ช่วยอัจฉริยะ (LINE OA)",
-                steps: [
-                    "เปิดเบราว์เซอร์ไปที่ <b>LINE Developers Console</b> แล้วลงชื่อเข้าใช้งานด้วยบัญชี LINE",
-                    "สร้าง Provider ใหม่ จากนั้นคลิกสร้าง Channel ประเภท <b>Messaging API</b>",
-                    "กรอกรายละเอียดชื่อบอท (เช่น My IoT Bot) และอัปโหลดรูปโปรไฟล์ให้เรียบร้อย",
-                    "ไปที่แถบเมนู <b>Messaging API</b> เลื่อนลงมาล่างสุดแล้วกดออกสิทธิ์ <b>Channel Access Token (Long-lived)</b> และคัดลอกเก็บไว้ให้ดี",
-                    "ไปที่แถบเมนู <b>Basic settings</b> แล้วเลื่อนหา <b>Your user ID</b> เพื่อคัดลอกรหัสประจำตัวของผู้รับการแจ้งเตือน"
-                ],
-                tip: "🔑 สิ่งที่ต้องได้จากภารกิจนี้: 1. Channel Access Token และ 2. Your user ID เพื่อนำไปใส่ในโค้ดคลาวด์",
-                codeBlock: null
-            },
-            m2: {
-                title: "☁️ Mission 2: เตรียมฝั่ง Google คลาวด์ (Drive & Apps Script)",
-                desc: "ภารกิจนี้เราจะสร้าง 'คนกลาง' (API Gateway) ไว้บน Google คลาวด์ เพื่อรับรูปภาพข้อความยาวๆ จากบอร์ดนำไปบันทึกลงโฟลเดอร์ Google Drive พร้อมแชร์ลิงก์ส่งต่อไปยัง LINE API อีกทอดหนึ่งครับ",
-                steps: [
-                    "เข้าสู่หน้า Google Drive สร้างโฟลเดอร์ใหม่เพื่อเก็บรูป (เช่น ESP32_Images) จากนั้นคัดลอก <b>Folder ID</b> จากบน URL",
-                    "ไปที่ <b>Google Apps Script (GAS)</b> เพื่อสร้างโปรเจกต์ใหม่และวางชุดคำสั่งรับค่าแปลงรหัส Base64",
-                    "ทำการ Deploy สคริปต์ให้เป็นรูปแบบ <b>เว็บแอป (Web App)</b> ตั้งสิทธิ์เข้าถึงให้เป็น <b>ทุกคน (Anyone)</b>",
-                    "กดอนุมัติสิทธิ์ (Authorize) และคัดลอกลิงก์ <b>Web App URL</b> สำหรับนำไปใส่ในโค้ดเครื่องรับสัญญาณ"
-                ],
-                tip: "⚠️ ข้อควรระวัง: ตอนตั้งค่าการเผยแพร่เว็บแอป (Who has access) ต้องเลือกเป็น 'Anyone' เสมอ ไม่งั้นบอร์ด ESP32 จะยิงข้อมูลไม่เข้า",
-                codeBlock: `// โค้ด Google Apps Script (GAS) สำหรับใช้งานเป็น API
-const FOLDER_ID = 'ใส่_FOLDER_ID_ของ_GOOGLE_DRIVE_ที่นี่'; 
-const LINE_ACCESS_TOKEN = 'ใส่_CHANNEL_ACCESS_TOKEN_จาก_LINE_ที่นี่';
-const LINE_USER_ID = 'ใส่_USER_ID_จาก_LINE_ที่นี่';
+    <button class="ask-ai-btn" onclick="openAITips()">
+        ✨ Ask Gemini Tutor
+    </button>
 
-function doPost(e) {
-  try {
-    const parsedData = JSON.parse(e.postData.contents);
-    const base64Image = parsedData.image; 
-    if (!base64Image) {
-      return ContentService.createTextOutput("Error: ไม่พบข้อมูลรูปภาพ").setMimeType(ContentService.MimeType.TEXT);
+<script>
+// ฐานข้อมูลบทเรียนเปลี่ยนเป็นระบบ IoT Security ด้วย ESP32-CAM
+const database = [
+    {
+        id: "MISSION 1.1",
+        title: "System Overview",
+        desc: "ทำความเข้าใจบล็อกไดอะแกรม ทิศทางการไหลของข้อมูลภาพ Base64 จากตัวบอร์ดไปยัง LINE OA",
+        pdf: "mission1_1.pdf"
+    },
+    {
+        id: "MISSION 1.2",
+        title: "LINE OA & Token Setup",
+        desc: "ขั้นตอนสมัคร LINE Developers เพื่อออกรหัส Channel Access Token และค้นหาค่า User ID ของตัวเอง",
+        pdf: "mission1_2.pdf"
+    },
+    {
+        id: "MISSION 1.3",
+        title: "Google Apps Script API",
+        desc: "การสร้างโปรเจกต์สคริปต์เซิร์ฟเวอร์เลส เชื่อมต่อ Google Drive และ Deploy Web App เป็น API ตัวกลาง",
+        pdf: "mission1_3.pdf"
+    },
+    {
+        id: "MISSION 1.4",
+        title: "Hardware & Switch Wiring",
+        desc: "แผนผังการต่อวงจรสวิตช์ปุ่มกดเข้ากับขาพิน GPIO 14 และการเชื่อมตัวบอร์ดเข้ากับโมดูลอัปโหลด FTDI",
+        pdf: "mission1_4.pdf"
+    },
+    {
+        id: "MISSION 1.5",
+        title: "Firmware Programming",
+        desc: "การเขียนซอร์สโค้ดใน Arduino IDE ติดตั้งคลังไลบรารีกล้อง การเข้ารหัสสตริง และล้าง Buffer ตกค้าง",
+        pdf: "mission1_5.pdf"
+    },
+    {
+        id: "MISSION 1.6",
+        title: "System Test & Debug",
+        desc: "ทดสอบกดปุ่ม ตรวจเช็ก Log ความเร็ว 115200 ผ่าน Serial Monitor และวิเคราะห์รหัส HTTP Code สำเร็จ",
+        pdf: "mission1_6.pdf"
     }
-    const decodedImage = Utilities.base64Decode(base64Image);
-    const fileName = 'ESP32_Capture_' + Utilities.formatDate(new Date(), "GMT+7", "yyyyMMdd_HHmmss") + '.jpg';
-    const blob = Utilities.newBlob(decodedImage, 'image/jpeg', fileName);
-    const folder = DriveApp.getFolderById(FOLDER_ID);
-    const file = folder.createFile(blob);
+];
+
+function initSystem() {
+    const menuContainer = document.getElementById("sidebarMenu");
+    menuContainer.innerHTML = "";
     
-    // เปิดสิทธิ์ให้ LINE ดึงภาพไปแสดงได้
-    file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
-    const imageUrl = "https://drive.google.com/uc?export=view&id=" + file.getId();
-
-    sendToLine(imageUrl);
-    return ContentService.createTextOutput("Success: บันทึกรูปและส่ง LINE เรียบร้อย").setMimeType(ContentService.MimeType.TEXT);
-  } catch (error) {
-    return ContentService.createTextOutput("Error: " + error.toString()).setMimeType(ContentService.MimeType.TEXT);
-  }
+    database.forEach((data, index) => {
+        const li = document.createElement("li");
+        li.className = "mission-item";
+        if(index === 0) li.className += " active";
+        li.setAttribute("onclick", `selectMission(${index})`);
+        
+        li.innerHTML = `
+            <div class="mission-id">${data.id}</div>
+            <div class="mission-title">${data.title}</div>
+            <div class="mission-desc">${data.desc}</div>
+        `;
+        menuContainer.appendChild(li);
+    });
+    
+    selectMission(0);
 }
 
-function sendToLine(imageUrl) {
-  const url = "https://api.line.me/v2/bot/message/push";
-  const headers = { "Content-Type": "application/json", "Authorization": "Bearer " + LINE_ACCESS_TOKEN };
-  const payload = {
-    "to": LINE_USER_ID,
-    "messages": [
-      { "type": "text", "text": "🚨 ตรวจพบการเคลื่อนไหว! มีภาพถ่ายใหม่จาก ESP32-CAM" },
-      { "type": "image", "originalContentUrl": imageUrl, "previewImageUrl": imageUrl }
-    ]
-  };
-  UrlFetchApp.fetch(url, { "method": "post", "headers": headers, "payload": JSON.stringify(payload), "muteHttpExceptions": true });
-}`
-            },
-            m3: {
-                title: "🔌 Mission 3: การเตรียมฝั่งฮาร์ดแวร์ (ต่อวงจรไฟฟ้า)",
-                desc: "ภารกิจปฏิบัติการด้านอิเล็กทรอนิกส์! นักเรียนต้องจัดเตรียมฮาร์ดแวร์และลงมือต่อพ่วงอุปกรณ์ภายนอกเข้ากับพินของไมโครคอนโทรลเลอร์",
-                steps: [
-                    "<b>การต่อสวิตช์อินพุต:</b> นำปุ่มกด (Tact Switch) ต่อสายสัญญาณเข้ากับขา <b>GPIO 14</b> ของบอร์ด และขากราวด์ต่อร่วมเข้าพิน <b>GND</b>",
-                    "เนื่องจากโปรแกรมกำหนดโหมดให้เป็น <code>INPUT_PULLUP</code> ภายใน จึงสามารถต่อตรงลงกราวด์ได้เลยโดยไม่ต้องพ่วงตัวต้านทานเพิ่ม",
-                    "<b>การเชื่อมต่ออุปกรณ์โปรแกรมเมอร์:</b> ต่อโมดูลแปลงสัญญาณ USB-to-TTL (FTDI) เข้ากับขาโปรแกรมมิ่งของบอร์ดดังนี้: <ul><li>5V ➔ 5V</li><li>GND ➔ GND</li><li>TX ➔ U0R</li><li>RX ➔ U0T</li></ul>",
-                    "<b>เปิดโหมดดาวน์โหลดแฟลชเมมโมรี่:</b> ต่อสายจัมเปอร์ลัดวงจรระหว่างพิน <b>GPIO 0 กับ GND</b> ค้างไว้ก่อนอัปโหลดโค้ดทุกครั้ง"
-                ],
-                tip: "🛠️ ทักษะช่าง: อย่าลืมตรวจสอบจุดบัดกรีหรือสายจัมเปอร์ให้แน่นหนา หากใช้แรงดันไฟเกิน 5V บอร์ด ESP32-CAM อาจเสียหายได้ทันที",
-                codeBlock: null
-            },
-            m4: {
-                title: "💻 Mission 4: ฝั่งซอฟต์แวร์และการคอมไพล์โค้ด (Arduino IDE)",
-                desc: "เรียนรู้ขั้นตอนการใส่โค้ดเฟิร์มแวร์ลงบนบอร์ดสมองกลฝังตัวเพื่อเริ่มกระบวนการถ่ายรูปแปลงสัญญาณดิจิทัล",
-                steps: [
-                    "เปิดโปรแกรม Arduino IDE ขึ้นมาแล้วเข้าไปติดตั้ง Library เสริมที่จำเป็นชื่อ <code>base64</code>",
-                    "เลือกบอร์ดพัฒนาให้ถูกต้องโดยเลือกเป็น <b>AI Thinker ESP32-CAM</b>",
-                    "นำ <b>Wi-Fi SSID, Password</b> ของห้องเรียน และ <b>GAS Web App URL</b> จาก Mission 2 มาวางลงในตัวแปรด้านบนของโค้ด",
-                    "กดปุ่ม <b>Upload (ลูกศรขวา)</b> ถ้าระบบขึ้นสัญลักษณ์ Connecting ให้กดปุ่ม Reset บนตัวบอร์ด 1 ครั้ง",
-                    "เมื่ออัปโหลดเสร็จสมบูรณ์ร้อยละ 100 ให้ทำทำการ <b>ถอดสายจัมเปอร์ที่พิน GPIO 0 ออกจาก GND</b> เพื่อเปลี่ยนกลับสู่โหมดทำงานปกติ"
-                ],
-                tip: "💡 เทคนิคเด็ดของระบบนี้: ตัวโค้ดทำการสั่งเคลียร์หน่วยความจำเก่า (Buffer) ถึง 2 รอบก่อนกดถ่ายภาพจริง เพื่อแก้ไขปัญหากล้องค้างและได้ภาพสดใหม่อยู่เสมอ",
-                codeBlock: `#include <WiFi.h>
-#include <WiFiClientSecure.h>
-#include <HTTPClient.h>
-#include "esp_camera.h"
-#include <base64.h>
-
-const char* ssid = "YOUR_WIFI_NAME";
-const char* password = "YOUR_WIFI_PASSWORD";
-String GAS_URL = "YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL"; 
-
-const int BUTTON_PIN = 14; 
-bool isPressing = false;
-
-// พินกล้องสำหรับรุ่น AI Thinker
-#define PWDN_GPIO_NUM 32
-#define RESET_GPIO_NUM -1
-#define XCLK_GPIO_NUM 0
-#define SIOD_GPIO_NUM 26
-#define SIOC_GPIO_NUM 27
-#define Y9_GPIO_NUM 35
-#define Y8_GPIO_NUM 34
-#define Y7_GPIO_NUM 39
-#define Y6_GPIO_NUM 36
-#define Y5_GPIO_NUM 21
-#define Y4_GPIO_NUM 19
-#define Y3_GPIO_NUM 18
-#define Y2_GPIO_NUM 5
-#define VSYNC_GPIO_NUM 25
-#define HREF_GPIO_NUM 23
-#define PCLK_GPIO_NUM 22
-
-void setup() {
-  Serial.begin(115200);
-  pinMode(BUTTON_PIN, INPUT_PULLUP);
-  WiFi.begin(ssid, password);
-  while (WiFi.status() != WL_CONNECTED) { delay(500); Serial.print("."); }
-  Serial.println("\\n✅ Wi-Fi Connected!");
-
-  camera_config_t config;
-  config.ledc_channel = LEDC_CHANNEL_0; config.ledc_timer = LEDC_TIMER_0;
-  config.pin_d0 = Y2_GPIO_NUM; config.pin_d1 = Y3_GPIO_NUM; config.pin_d2 = Y4_GPIO_NUM;
-  config.pin_d3 = Y5_GPIO_NUM; config.pin_d4 = Y6_GPIO_NUM; config.pin_d5 = Y7_GPIO_NUM;
-  config.pin_d6 = Y8_GPIO_NUM; config.pin_d7 = Y9_GPIO_NUM; config.pin_xclk = XCLK_GPIO_NUM;
-  config.pin_pclk = PCLK_GPIO_NUM; config.pin_vsync = VSYNC_GPIO_NUM; config.pin_href = HREF_GPIO_NUM;
-  config.pin_sscb_sda = SIOD_GPIO_NUM; config.pin_sscb_scl = SIOC_GPIO_NUM;
-  config.pin_pwdn = PWDN_GPIO_NUM; config.pin_reset = RESET_GPIO_NUM; config.xclk_freq_hz = 20000000;
-  config.pixel_format = PIXFORMAT_JPEG; config.frame_size = FRAMESIZE_VGA; config.jpeg_quality = 12; config.fb_count = 1;
-
-  esp_err_t err = esp_camera_init(&config);
-  if (err != ESP_OK) { Serial.printf("Camera init failed\\n"); return; }
-  Serial.println("✅ Camera Initialized!");
+function selectMission(index) {
+    const items = document.querySelectorAll(".mission-item");
+    items.forEach(item => item.classList.remove("active"));
+    items[index].classList.add("active");
+    
+    const mission = database[index];
+    
+    const pdfViewer = document.getElementById("pdfViewer");
+    
+    // ดึง URL ปัจจุบันแบบเต็ม
+    const currentBaseUrl = window.location.href.split('?')[0];
+    
+    // สร้าง URL ของไฟล์ PDF
+    const absolutePdfUrl = new URL(mission.pdf, currentBaseUrl).href;
+    
+    // ตรวจจับอุปกรณ์
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    
+    if (isMobile) {
+        pdfViewer.src = `https://docs.google.com/gview?url=${encodeURIComponent(absolutePdfUrl)}&embedded=true`;
+    } else {
+        pdfViewer.src = mission.pdf;
+    }
 }
 
-void loop() {
-  int buttonState = digitalRead(BUTTON_PIN);
-  if (buttonState == LOW && !isPressing) {
-    isPressing = true;
-    Serial.println("🔘 Button Pressed! Taking photo...");
-    sendImageToGoogle();
-    delay(5000); // ป้องกันบอร์ดกดส่งรัวๆ
-  } else if (buttonState == HIGH) { isPressing = false; }
-  delay(50);
+function openAITips() {
+    alert(
+        "🤖 แนะนำวิธียื่นคำถามให้ที่ปรึกษาหลัก (Gemini Tutor):\n\n" +
+        "1. เมื่อรันโค้ดแล้วระบบแจ้งเออร์เรอร์:\n" +
+        "   ให้ก๊อปปี้ข้อความแจ้งเตือนสีแดงจากใน Arduino IDE ส่งให้ AI ตรวจสอบตรงๆ\n\n" +
+        "2. เมื่อไม่เข้าใจบทบาทของฟังก์ชันรับส่งรูปภาพ:\n" +
+        "   ให้เขียนคำสั่งถามว่า 'ช่วยอธิบายการแปลงภาพเป็น Base64 ใน ESP32-CAM ให้หน่อยครับ'"
+    );
 }
 
-void sendImageToGoogle() {
-  camera_fb_t * fb = NULL;
-  // เคลียร์เบอร์เฟอร์รูปเก่าออก 2 รอบ
-  fb = esp_camera_fb_get(); esp_camera_fb_return(fb); delay(100);
-  fb = esp_camera_fb_get(); esp_camera_fb_return(fb); delay(100);
-
-  fb = esp_camera_fb_get();
-  if (!fb) { Serial.println("❌ Capture Failed"); return; }
-
-  String imageBase64 = base64::encode((uint8_t *)fb->buf, fb->len);
-  esp_camera_fb_return(fb);
-
-  WiFiClientSecure client; client.setInsecure();
-  HTTPClient http; http.begin(client, GAS_URL);
-  http.setFollowRedirects(HTTPC_STRICT_FOLLOW_REDIRECTS);
-  http.addHeader("Content-Type", "application/json");
-
-  String payload = "{\\"image\\":\\"" + imageBase64 + "\\"}";
-  int httpCode = http.POST(payload);
-  if (httpCode == HTTP_CODE_OK || httpCode == HTTP_CODE_FOUND) {
-    Serial.println("✅ ส่งภาพสำเร็จ! เข้าไปดูใน LINE ได้เลย");
-  } else { Serial.printf("❌ Error: %d\\n", httpCode); }
-  http.end();
-}`
-            },
-            m5: {
-                title: "🏁 Mission 5: การทดสอบระบบ (End-to-End Testing)",
-                desc: "ภารกิจสุดท้ายคือการทดสอบการทำงานร่วมกันตั้งแต่ต้นน้ำไปจนถึงปลายน้ำเพื่อส่งงาน",
-                steps: [
-                    "เปิดหน้าต่าง <b>Serial Monitor</b> ใน Arduino IDE และตั้งค่าความเร็วรับส่งข้อมูลไปที่ <b>115200 Baud Rate</b>",
-                    "กดปุ่ม Reset บนบอร์ด สังเกตว่าต้องขึ้นข้อความว่า <code>Wi-Fi Connected!</code> และ <code>Camera Initialized!</code>",
-                    "ลองทำการกดปุ่มสวิตช์ควบคุมที่ต่ออยู่ที่ขาพิน 14 จำนวน 1 ครั้ง",
-                    "สังเกต Log ข้อความบนหน้าจอ Serial Monitor จะต้องแสดงสถานะการเคลียร์ภาพ แปรรหัส และขึ้นข้อความสำเร็จ",
-                    "เปิดหน้าจอโทรศัพท์มือถือเข้าแอปพลิเคชัน LINE เพื่อเช็กความถูกต้องว่า บอทสามารถส่งรูปและรายงานแจ้งเตือนเข้ามาได้ทันทีหรือไม่"
-                ],
-                tip: "🎯 ชิ้นงานสำเร็จ: หากภาพถ่ายบันทึกลง Google Drive และแสดงผลบนหน้าแชตไลน์พร้อมกัน แสดงว่าคุณสอบผ่านภารกิจโครงงานนี้แล้ว!",
-                codeBlock: null
-            }
-        };
-
-        // ฟังก์ชันในการสลับเปลี่ยนหน้าจอวิชาเรียน
-        function switchMission(key) {
-            const mission = missionData[key];
-            const container = document.getElementById('content-area');
-            
-            // อัปเดตการแสดงผลไฮไลต์สีของปุ่มที่ถูกกดบนแถบ Sidebar
-            document.querySelectorAll('.mission-btn').forEach(btn => {
-                btn.classList.remove('bg-emerald-600', 'text-white', 'font-medium');
-                btn.classList.add('text-gray-400', 'hover:bg-gray-900', 'hover:text-white');
-            });
-            const activeBtn = document.getElementById(`btn-${key}`);
-            activeBtn.classList.remove('text-gray-400', 'hover:bg-gray-900', 'hover:text-white');
-            activeBtn.classList.add('bg-emerald-600', 'text-white', 'font-medium');
-
-            // เจนเนอเรทโครงสร้าง HTML ของข้อมูลแต่ละ Mission ออกมาบนหน้าจอหลัก
-            let stepsHtml = '';
-            mission.steps.forEach((step, index) => {
-                stepsHtml += `
-                    <li class="flex items-start gap-3">
-                        <span class="flex-shrink-0 w-6 h-6 rounded-full bg-emerald-950 border border-emerald-700 text-emerald-400 text-xs font-bold flex items-center justify-center mt-0.5">${index + 1}</span>
-                        <span class="text-gray-300 text-sm leading-relaxed">${step}</span>
-                    </li>
-                `;
-            });
-
-            let codeSectionHtml = '';
-            if(mission.codeBlock) {
-                codeSectionHtml = `
-                    <div class="mt-8">
-                        <div class="flex items-center justify-between bg-gray-800 px-4 py-2 rounded-t-xl border-b border-gray-700">
-                            <span class="text-xs font-mono text-gray-400"><i class="fa-solid fa-code-branch text-emerald-400"></i> Source Code สำหรับนักเรียน</span>
-                            <button onclick="copyCode()" class="text-xs bg-gray-700 hover:bg-gray-600 px-2 py-1 rounded transition text-emerald-300 font-medium">
-                                <i class="fa-regular fa-copy"></i> คัดลอกโค้ด
-                            </button>
-                        </div>
-                        <pre class="bg-gray-950 p-4 rounded-b-xl overflow-x-auto text-xs font-mono text-emerald-400 leading-relaxed border border-gray-800" id="code-snippet">${mission.codeBlock}</pre>
-                    </div>
-                `;
-            }
-
-            container.innerHTML = `
-                <div class="space-y-6">
-                    <div>
-                        <h2 class="heading-font text-2xl font-bold text-white">${mission.title}</h2>
-                        <p class="text-sm text-gray-400 mt-2 leading-relaxed">${mission.desc}</p>
-                    </div>
-                    
-                    <div class="bg-gray-900 border border-gray-800 rounded-xl p-6">
-                        <h3 class="heading-font text-base font-semibold text-emerald-400 mb-4"><i class="fa-solid fa-list-check"></i> ขั้นตอนการปฏิบัติงาน (Instructions)</h3>
-                        <ul class="space-y-4">${stepsHtml}</ul>
-                    </div>
-
-                    <div class="bg-amber-950/20 border border-amber-900/60 rounded-xl p-4 text-xs flex items-start gap-3">
-                        <i class="fa-solid fa-lightbulb text-amber-400 text-base mt-0.5"></i>
-                        <span class="text-amber-200 leading-relaxed">${mission.tip}</span>
-                    </div>
-
-                    ${codeSectionHtml}
-                </div>
-            `;
-        }
-
-        // ฟังก์ชันช่วยอำนวยความสะดวกในการก็อปปี้โค้ดของเด็กนักเรียน
-        function copyCode() {
-            const codeText = document.getElementById('code-snippet').innerText;
-            navigator.clipboard.writeText(codeText).then(() => {
-                alert('📋 คัดลอกโค้ดไปยังคลิปบอร์ดแล้ว! นักเรียนสามารถนำไปวางในโปรแกรมได้เลย');
-            });
-        }
-
-        // สั่งให้หน้าจอแรกเริ่มรันหน้า Overview อัตโนมัติเมื่อเว็บถูกเปิดขึ้นมา
-        window.onload = function() {
-            switchMission('overview');
-        };
-    </script>
+window.onload = initSystem;
+</script>
 </body>
 </html>
