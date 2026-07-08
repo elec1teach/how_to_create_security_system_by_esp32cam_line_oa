@@ -39,6 +39,44 @@
         display: flex;
         flex-direction: column;
         z-index: 10;
+        /* เพิ่ม Transition เพื่อให้ยุบ/ขยายแบบนุ่มนวล */
+        transition: width 0.3s ease, padding 0.3s ease;
+        overflow: hidden;
+        white-space: nowrap; /* ป้องกันไม่ให้เนื้อหาตกบรรทัดตอนที่แผงกำลังยุบ */
+    }
+
+    /* Class สำหรับตอนยุบแผง */
+    .sidebar.collapsed {
+        width: 0;
+        padding-left: 0;
+        padding-right: 0;
+        border-right: none;
+    }
+
+    /* ปุ่มลูกศรสำหรับยุบ/ขยายแผง */
+    .toggle-btn {
+        position: absolute;
+        top: 20px;
+        left: 320px; /* เริ่มต้นอยู่ติดขอบ Sidebar */
+        width: 25px;
+        height: 50px;
+        background: var(--panel-bg);
+        border: 1px solid rgba(0, 255, 255, 0.2);
+        border-left: none; /* ลบเส้นขอบซ้ายให้เชื่อมกับ Sidebar */
+        color: var(--neon-blue);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        border-radius: 0 8px 8px 0;
+        z-index: 20;
+        transition: left 0.3s ease, background 0.2s ease;
+        backdrop-filter: blur(10px);
+    }
+
+    .toggle-btn:hover {
+        background: rgba(0, 255, 255, 0.1);
+        box-shadow: 2px 0 10px rgba(0, 255, 255, 0.2);
     }
 
     .brand {
@@ -84,7 +122,7 @@
 
     .mission-id { font-family: 'Orbitron', sans-serif; font-weight: 700; font-size: 13px; color: var(--neon-blue); }
     .mission-title { font-weight: 500; font-size: 14px; color: var(--text-main); margin: 2px 0; }
-    .mission-desc { font-size: 11px; color: var(--text-muted); display: none; }
+    .mission-desc { font-size: 11px; color: var(--text-muted); display: none; white-space: normal; }
 
     .mission-item.active .mission-desc { display: block; }
 
@@ -96,6 +134,8 @@
         flex-direction: column;
         height: 100vh;
         overflow-y: auto;
+        /* เพิ่ม Transition ให้ขยายตัวนุ่มนวลตามแผงซ้าย */
+        transition: all 0.3s ease; 
     }
 
     /* พื้นที่แสดงไฟล์ PDF */
@@ -167,6 +207,10 @@
             max-height: 250px;
             border-right: none;
             border-bottom: 1px solid rgba(0, 255, 255, 0.2);
+            transition: none; /* ปิด Transition บนมือถือ */
+        }
+        .toggle-btn {
+            display: none; /* ซ่อนปุ่มยุบแผงในมือถือเพราะหน้าจอเรียงแนวตั้งอยู่แล้ว */
         }
         .main-content {
             height: auto;
@@ -187,10 +231,12 @@
 </head>
 <body>
 
-    <aside class="sidebar">
+    <aside class="sidebar" id="sidebar">
         <div class="brand">SECURITY LAB</div>
         <ul class="mission-list" id="sidebarMenu"></ul>
     </aside>
+
+    <div class="toggle-btn" id="toggleBtn" onclick="toggleSidebar()">◀</div>
 
     <main class="main-content">
         <h3 style="color: var(--neon-blue); margin-bottom: 12px; font-size: 16px;">📄 Operation Manual (คู่มือปฏิบัติการ)</h3>
@@ -289,6 +335,26 @@ function selectMission(index) {
         pdfViewer.src = `https://docs.google.com/gview?url=${encodeURIComponent(absolutePdfUrl)}&embedded=true`;
     } else {
         pdfViewer.src = mission.pdf;
+    }
+}
+
+// -----------------------------------------------------
+// ฟังก์ชันใหม่: ควบคุมการยุบ/ขยาย Sidebar
+// -----------------------------------------------------
+function toggleSidebar() {
+    const sidebar = document.getElementById("sidebar");
+    const toggleBtn = document.getElementById("toggleBtn");
+    
+    // สลับ Class collapsed
+    sidebar.classList.toggle("collapsed");
+    
+    // ตรวจสอบสถานะว่าตอนนี้ Sidebar ยุบอยู่หรือไม่
+    if (sidebar.classList.contains("collapsed")) {
+        toggleBtn.innerHTML = "▶"; // เปลี่ยนลูกศรชี้ไปทางขวา
+        toggleBtn.style.left = "0px"; // ดึงปุ่มมาอยู่ชิดซ้ายสุด
+    } else {
+        toggleBtn.innerHTML = "◀"; // เปลี่ยนลูกศรชี้ไปทางซ้าย
+        toggleBtn.style.left = "320px"; // ผลักปุ่มกลับไปที่ความกว้าง 320px
     }
 }
 
